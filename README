@@ -57,3 +57,17 @@ System requirements
 
 markov-complete has been tested on Debian stretch (9.0). It may work on other
 systems (possibly with some minor modifications).
+
+
+Dependencies
+------------
+
+* gcc
+* g++
+* make
+* cmake
+* libncurses5-dev
+* libcurl4-openssl-dev
+* zlib1g-dev
+* libgcrypt20-dev
+* vim-nox
