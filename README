@@ -10,8 +10,10 @@
                  \___\___/|_| |_| |_| .__/|_|\___|\__\___|
                                     |_|
 
+Installation
+------------
 
-To use markov-complete, run:
+To install markov-complete, run:
 
     $ sudo make install-libs
     $ make
@@ -26,9 +28,30 @@ To patch readline once you've completed the above steps, run:
 
 Programs which dynamically link to readline will now use the patched version.
 
-markov-complete has been tested on Debian stretch (9.0). It may work on other
-systems (possibly with some minor modifications).
+
+Generating the chain
+--------------------
+
+You will need a "markov-chain" file in order to receive suggestions. Once
+you've installed markov-complete run (from this directory):
+
+    $ cd markov/markov
+    $ cp <path-to-your-corpus-text> corpus-text
+    $ cat corpus-text | ./generate.py
+    $ ./transpile.py chain.json > markov-chain
+    $ sudo cp markov-chain /usr/local/share/
+
+
+Usage
+-----
 
 Once you've typed a few words in a program that uses markov-complete, press
-` (backtick) to autocomplete the next word. Press Ctrl+O to cycle through
+` (backtick) to autocomplete the next word. Press Ctrl+o to cycle through
 Markov suggestions. Ctrl+Shift+` will enter a normal backtick.
+
+
+System requirements
+-------------------
+
+markov-complete has been tested on Debian stretch (9.0). It may work on other
+systems (possibly with some minor modifications).
