@@ -1,0 +1,122 @@
+From 95c78f2e207370f894765fde09b158a7a8da02fa Mon Sep 17 00:00:00 2001
+From: Alyssa Rosenzweig <alyssa@rosenzweig.io>
+Date: Sat, 12 Nov 2016 02:35:58 -0800
+Subject: [PATCH] Markov patch
+
+---
+ CMakeLists.txt                  |  4 ++--
+ src/core/wee-command.c          |  4 ++++
+ src/core/weechat.c              |  2 ++
+ src/gui/curses/gui-curses-key.c |  3 +++
+ src/gui/gui-input.c             | 21 +++++++++++++++++++++
+ src/gui/gui-input.h             |  3 +++
+ 6 files changed, 35 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4ba1bd4..667da02 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -27,8 +27,8 @@ project(weechat C)
+ set(CMAKE_VERBOSE_MAKEFILE OFF)
+ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+ set(CMAKE_SKIP_RPATH ON)
+-set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -Wall -Wextra -Werror-implicit-function-declaration")
+-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror-implicit-function-declaration")
++set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -Wall -Wextra -Werror-implicit-function-declaration -lstdc++ -lmarkov")
++set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror-implicit-function-declaration -lmarkov")
+ 
+ # version
+ execute_process(COMMAND ${CMAKE_SOURCE_DIR}/version.sh devel-major OUTPUT_VARIABLE VERSION_MAJOR)
+diff --git a/src/core/wee-command.c b/src/core/wee-command.c
+index 43bb1e3..fff7684 100644
+--- a/src/core/wee-command.c
++++ b/src/core/wee-command.c
+@@ -3077,6 +3077,10 @@ COMMAND_CALLBACK(input)
+         gui_input_undo (buffer);
+     else if (string_strcasecmp (argv[1], "redo") == 0)
+         gui_input_redo (buffer);
++    else if (string_strcasecmp (argv[1], "markov") == 0)
++        gui_input_markov (buffer);
++    else if (string_strcasecmp (argv[1], "markov_substitute") == 0)
++        gui_input_markov_substitute (buffer);
+     else if (string_strcasecmp (argv[1], "paste_start") == 0)
+     {
+         /* do nothing here */
+diff --git a/src/core/weechat.c b/src/core/weechat.c
+index f0b7d44..1642b30 100644
+--- a/src/core/weechat.c
++++ b/src/core/weechat.c
+@@ -77,6 +77,7 @@
+ #include "../gui/gui-main.h"
+ #include "../plugins/plugin.h"
+ #include "../plugins/plugin-api.h"
++#include <markov.h>
+ 
+ 
+ int weechat_debug_core = 0;            /* debug level for core              */
+@@ -700,6 +701,7 @@ weechat_init (int argc, char *argv[], void (*gui_init_cb)())
+         gui_layout_window_apply (gui_layout_current, -1);
+     if (weechat_upgrading)
+         upgrade_weechat_end ();         /* remove .upgrade files + signal   */
++    initialize_chain("/usr/local/share/markov-chain");
+ }
+ 
+ /*
+diff --git a/src/gui/curses/gui-curses-key.c b/src/gui/curses/gui-curses-key.c
+index cd26706..fafeec4 100644
+--- a/src/gui/curses/gui-curses-key.c
++++ b/src/gui/curses/gui-curses-key.c
+@@ -217,6 +217,9 @@ gui_key_default_bindings (int context)
+         BIND(/* m-m           */ "meta-m",             "/mute mouse toggle");
+         BIND(/* start paste   */ "meta2-200~",         "/input paste_start");
+         BIND(/* end paste     */ "meta2-201~",         "/input paste_stop");
++        BIND(                    "ctrl-^",             "/input insert `");
++        BIND(                    "`",                  "/input markov");
++        BIND(                    "ctrl-O",             "/input markov_substitute");
+ 
+         /* bind meta-j + {01..99} to switch to buffers # > 10 */
+         for (i = 1; i < 100; i++)
+diff --git a/src/gui/gui-input.c b/src/gui/gui-input.c
+index cd5134c..4697774 100644
+--- a/src/gui/gui-input.c
++++ b/src/gui/gui-input.c
+@@ -1868,3 +1868,24 @@ gui_input_redo (struct t_gui_buffer *buffer)
+         gui_input_undo_use (buffer, buffer->ptr_input_undo);
+     }
+ }
++
++/* run markov chain on input */
++#include <markov.h>
++
++ssize_t gui_input_markov(struct t_gui_buffer *buffer) {
++    char out[64];
++    ssize_t len = nextWord(out, 64, buffer->input_buffer, buffer->input_buffer_length);
++
++    if(len > 0) {
++        gui_input_insert_string(buffer, out, -1);
++        gui_input_text_changed_modifier_and_signal(buffer, 0, 1);
++    }
++
++    return len;
++}
++
++void gui_input_markov_substitute(struct t_gui_buffer *buffer) {
++    gui_input_delete_previous_word(buffer);
++
++    if(gui_input_markov(buffer) <= 0) gui_input_clipboard_paste(buffer);
++}
+diff --git a/src/gui/gui-input.h b/src/gui/gui-input.h
+index d7cd1e6..787c424 100644
+--- a/src/gui/gui-input.h
++++ b/src/gui/gui-input.h
+@@ -89,4 +89,7 @@ extern void gui_input_insert (struct t_gui_buffer *buffer, const char *args);
+ extern void gui_input_undo (struct t_gui_buffer *buffer);
+ extern void gui_input_redo (struct t_gui_buffer *buffer);
+ 
++extern ssize_t gui_input_markov (struct t_gui_buffer *buffer);
++extern void gui_input_markov_substitute (struct t_gui_buffer *buffer);
++
+ #endif /* WEECHAT_GUI_INPUT_H */
+-- 
+2.10.2
+

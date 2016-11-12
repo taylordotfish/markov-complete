@@ -1,0 +1,187 @@
+From 53127ca307b7581081e7b9955d45ce431664ec1b Mon Sep 17 00:00:00 2001
+From: taylor.fish <taylor.fish@users.noreply.github.com>
+Date: Sat, 12 Nov 2016 10:14:04 +0000
+Subject: [PATCH] Add Markov chain text completion
+
+---
+ Makefile.in       | 12 ++++++++----
+ readline.c        | 34 +++++++++++++++++++++++++++++++++-
+ shlib/Makefile.in | 16 +++++++++++-----
+ 3 files changed, 52 insertions(+), 10 deletions(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index 6522573..c201604 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -73,7 +73,7 @@ DESTDIR =
+ ETAGS = etags
+ CTAGS = ctags -tw
+ 
+-CFLAGS = @CFLAGS@
++CFLAGS = @CFLAGS@ -I $(srcdir)/markov
+ LOCAL_CFLAGS = @LOCAL_CFLAGS@ -DRL_LIBRARY_VERSION='"$(RL_LIBRARY_VERSION)"'
+ CPPFLAGS = @CPPFLAGS@
+ 
+@@ -86,7 +86,7 @@ TERMCAP_LIB = @TERMCAP_LIB@
+ INCLUDES = -I. -I$(srcdir)
+ 
+ XCCFLAGS = $(DEFS) $(LOCAL_DEFS) $(INCLUDES) $(CPPFLAGS)
+-CCFLAGS = $(XCCFLAGS) $(LOCAL_CFLAGS) $(CFLAGS)
++CCFLAGS = $(XCCFLAGS) $(LOCAL_CFLAGS) $(CFLAGS) -lstdc++ -I$(srcdir)/markov
+ 
+ # could add -Werror here
+ GCC_LINT_FLAGS = -ansi -Wall -Wshadow -Wpointer-arith -Wcast-qual \
+@@ -114,7 +114,7 @@ CSOURCES = $(srcdir)/readline.c $(srcdir)/funmap.c $(srcdir)/keymaps.c \
+ 	   $(srcdir)/histfile.c $(srcdir)/nls.c $(srcdir)/search.c \
+ 	   $(srcdir)/shell.c $(srcdir)/savestring.c $(srcdir)/tilde.c \
+ 	   $(srcdir)/text.c $(srcdir)/misc.c $(srcdir)/compat.c \
+-	   $(srcdir)/mbutil.c
++	   $(srcdir)/mbutil.c $(srcdir)/markov/markov.cpp
+ 
+ # The header files for this library.
+ HSOURCES = $(srcdir)/readline.h $(srcdir)/rldefs.h $(srcdir)/chardefs.h \
+@@ -124,7 +124,7 @@ HSOURCES = $(srcdir)/readline.h $(srcdir)/rldefs.h $(srcdir)/chardefs.h \
+ 	   $(srcdir)/ansi_stdlib.h $(srcdir)/tcap.h $(srcdir)/rlstdc.h \
+ 	   $(srcdir)/xmalloc.h $(srcdir)/rlprivate.h $(srcdir)/rlshell.h \
+ 	   $(srcdir)/rltypedefs.h $(srcdir)/rlmbutil.h \
+-	   $(srcdir)/colors.h $(srcdir)/parse-colors.h
++	   $(srcdir)/colors.h $(srcdir)/parse-colors.h $(srcdir)/markov/markov.h
+ 
+ HISTOBJ = history.o histexpand.o histfile.o histsearch.o shell.o mbutil.o
+ TILDEOBJ = tilde.o
+@@ -585,3 +585,7 @@ histexpand.o: histexpand.c
+ histfile.o: histfile.c
+ history.o: history.c
+ histsearch.o: histsearch.c
++
++markov.o: markov/markov.cpp
++	${RM} $@
++	$(CC) -c $(CCFLAGS) -lstdc++ -o $@ $<
+diff --git a/readline.c b/readline.c
+index e51df4f..1ebaa39 100644
+--- a/readline.c
++++ b/readline.c
+@@ -522,6 +522,37 @@ _rl_internal_char_cleanup ()
+     _rl_erase_entire_line ();
+ }
+ 
++
++#include "markov.h"
++
++int markov_handle(char c, char *line_buffer) {
++    initialize_chain("/usr/local/share/markov-chain");
++    if (c == 0x0f) {
++        // Simulate Ctrl-W
++        rl_unix_word_rubout(1, 0x17);
++    }
++
++    if (c == '`' || c == 0x0f) {
++        char new_words[512];
++        ssize_t length = nextWord(
++            new_words, sizeof(new_words), rl_line_buffer,
++            strlen(rl_line_buffer)
++        );
++        if (length > 0) {
++            rl_insert_text(new_words);
++        } else if (c == 0x0f) {
++            rl_yank(0, 0);
++            _rl_last_command_was_kill = 0;
++        }
++    } else if (c == 0x1e) {
++        rl_insert_text("`");
++    } else {
++        return 0;
++    }
++    return 1;
++}
++
++
+ STATIC_CALLBACK int
+ #if defined (READLINE_CALLBACKS)
+ readline_internal_char ()
+@@ -568,6 +599,7 @@ readline_internal_charloop ()
+ 
+       RL_SETSTATE(RL_STATE_READCMD);
+       c = rl_read_key ();
++      int markov_result = markov_handle(c, rl_line_buffer);
+       RL_UNSETSTATE(RL_STATE_READCMD);
+ 
+       /* look at input.c:rl_getc() for the circumstances under which this will
+@@ -626,7 +658,7 @@ readline_internal_charloop ()
+ 	}
+ 
+       lastc = c;
+-      _rl_dispatch ((unsigned char)c, _rl_keymap);
++      if (!markov_result) _rl_dispatch ((unsigned char)c, _rl_keymap);
+       RL_CHECK_SIGNALS ();
+ 
+       /* If there was no change in _rl_last_command_was_kill, then no kill
+diff --git a/shlib/Makefile.in b/shlib/Makefile.in
+index f2ec3e4..36e32c5 100644
+--- a/shlib/Makefile.in
++++ b/shlib/Makefile.in
+@@ -63,7 +63,7 @@ localedir = @localedir@
+ # Support an alternate destination root directory for package building
+ DESTDIR =
+ 
+-CFLAGS = @CFLAGS@
++CFLAGS = @CFLAGS@ -I$(topdir)/markov
+ LOCAL_CFLAGS = @LOCAL_CFLAGS@ -DRL_LIBRARY_VERSION='"$(RL_LIBRARY_VERSION)"'
+ CPPFLAGS = @CPPFLAGS@
+ LDFLAGS = @LDFLAGS@ @LOCAL_LDFLAGS@ @CFLAGS@
+@@ -87,6 +87,7 @@ SHOBJ_LIBS = @SHOBJ_LIBS@
+ 
+ SHLIB_XLDFLAGS = @LDFLAGS@ @SHLIB_XLDFLAGS@
+ SHLIB_LIBS = @SHLIB_LIBS@
++override SHLIB_LIBS += -lstdc++
+ 
+ SHLIB_DOT = @SHLIB_DOT@
+ SHLIB_LIBPREF = @SHLIB_LIBPREF@
+@@ -105,7 +106,7 @@ SHLIB_MAJOR=		@SHLIB_MAJOR@
+ SHLIB_MINOR=		.@SHLIB_MINOR@
+ 
+ # For libraries which include headers from other libraries.
+-INCLUDES = -I. -I.. -I$(topdir)
++INCLUDES = -I. -I.. -I$(topdir) -I$(topdir)/markov
+ 
+ CCFLAGS = $(DEFS) $(LOCAL_DEFS) $(INCLUDES) $(CPPFLAGS) $(LOCAL_CFLAGS) $(CFLAGS)
+ 
+@@ -135,7 +136,7 @@ CSOURCES = $(topdir)/readline.c $(topdir)/funmap.c $(topdir)/keymaps.c \
+ 	   $(topdir)/shell.c $(topdir)/savestring.c $(topdir)/tilde.c \
+ 	   $(topdir)/text.c $(topdir)/misc.c $(topdir)/compat.c \
+ 	   $(topdir)/colors.c $(topdir)/parse-colors.c \
+-	   $(topdir)/mbutil.c
++	   $(topdir)/mbutil.c $(topdir)/markov/markov.cpp
+ 
+ # The header files for this library.
+ HSOURCES = $(topdir)/readline.h $(topdir)/rldefs.h $(topdir)/chardefs.h \
+@@ -145,7 +146,7 @@ HSOURCES = $(topdir)/readline.h $(topdir)/rldefs.h $(topdir)/chardefs.h \
+ 	   $(topdir)/ansi_stdlib.h $(topdir)/tcap.h $(topdir)/rlstdc.h \
+ 	   $(topdir)/xmalloc.h $(topdir)/rlprivate.h $(topdir)/rlshell.h \
+ 	   $(topdir)/rltypedefs.h $(topdir)/rlmbutil.h \
+-           $(topdir)/colors.h $(topdir)/parse-colors.h
++           $(topdir)/colors.h $(topdir)/parse-colors.h $(topdir)/markov/markov.h
+ 
+ SHARED_HISTOBJ = history.so histexpand.so histfile.so histsearch.so shell.so \
+ 		 mbutil.so
+@@ -156,7 +157,7 @@ SHARED_OBJ = readline.so vi_mode.so funmap.so keymaps.so parens.so search.so \
+ 	  util.so kill.so undo.so macro.so input.so callback.so terminal.so \
+ 	  text.so nls.so misc.so \
+ 	  $(SHARED_HISTOBJ) $(SHARED_TILDEOBJ) $(SHARED_COLORSOBJ) \
+-	  xmalloc.so xfree.so compat.so
++	  xmalloc.so xfree.so compat.so markov.so
+ 
+ ##########################################################################
+ 
+@@ -499,3 +500,8 @@ histexpand.so: histexpand.c
+ histfile.so: histfile.c
+ history.so: history.c
+ histsearch.so: histsearch.c
++
++markov.so: $(topdir)/markov/markov.cpp
++	${RM} $@
++	$(SHOBJ_CC) -c $(CCFLAGS) $(SHOBJ_CFLAGS) -lstdc++ -o $*.o $<
++	$(MV) $*.o $@
+-- 
+2.10.2
+
