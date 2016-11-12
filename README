@@ -22,7 +22,8 @@ To install markov-complete, run:
 
 A vim plugin will be installed in /etc/vimrc/plugin. WeeChat will be installed
 in /usr/local/bin/ with new default keybindings for markov-complete. You may
-need to regenerate ~/.weechat/weechat.conf.
+need to regenerate ~/.weechat/weechat.conf. You can also add the bindings
+manually under the [key] section of your weechat.conf. See weechat/keys.conf.
 
 To patch readline once you've completed the above steps, run:
 
