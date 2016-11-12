@@ -1,0 +1,34 @@
+                                        _
+                    _ __ ___   __ _ _ __| | _______   __
+                   | '_ ` _ \ / _` | '__| |/ / _ \ \ / /
+                   | | | | | | (_| | |  |   < (_) \ V /
+                   |_| |_| |_|\__,_|_|  |_|\_\___/ \_/
+                                           _      _
+                  ___ ___  _ __ ___  _ __ | | ___| |_ ___
+                 / __/ _ \| '_ ` _ \| '_ \| |/ _ \ __/ _ \
+                | (_| (_) | | | | | | |_) | |  __/ ||  __/
+                 \___\___/|_| |_| |_| .__/|_|\___|\__\___|
+                                    |_|
+
+
+To use markov-complete, run:
+
+    $ sudo make install-libs
+    $ make
+    $ sudo make install
+
+A vim plugin will be installed in /etc/vimrc/plugin. The default WeeChat
+configuration file will be updated with markov-complete keybindings.
+
+To patch readline once you've completed the above steps, run:
+
+    $ export LD_PRELOAD=/usr/local/lib/libreadline.so.7.0
+
+Programs which dynamically link to readline will now use the patched version.
+
+markov-complete has been tested on Debian stretch (9.0). It may work on other
+systems (possibly with some minor modifications).
+
+Once you've typed a few words in a program that uses markov-complete, press
+` (backtick) to autocomplete the next word. Press Ctrl+O to cycle through
+Markov suggestions. Ctrl+Shift+` will enter a normal backtick.
