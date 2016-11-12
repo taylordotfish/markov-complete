@@ -1,4 +1,4 @@
-From e9d360f6d2953b1cb78c3ea3843fb3264a25544e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: taylor.fish <taylor.fish@users.noreply.github.com>
 Date: Sat, 12 Nov 2016 18:01:47 +0000
 Subject: [PATCH] Add Markov chain text completion
@@ -32,7 +32,7 @@ index 6522573..c209190 100644
  # could add -Werror here
  GCC_LINT_FLAGS = -ansi -Wall -Wshadow -Wpointer-arith -Wcast-qual \
 diff --git a/readline.c b/readline.c
-index e51df4f..1ebaa39 100644
+index e51df4f..fd294b6 100644
 --- a/readline.c
 +++ b/readline.c
 @@ -522,6 +522,37 @@ _rl_internal_char_cleanup ()
