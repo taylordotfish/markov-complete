@@ -34,7 +34,7 @@ Generating the chain
 --------------------
 
 You will need a "markov-chain" file in order to receive suggestions. Once
-you've installed markov-complete run (from this directory):
+you've installed markov-complete, run (from this directory):
 
     $ cd markov/markov
     $ cp <path-to-your-corpus-text> corpus-text
