@@ -40,7 +40,7 @@ index e51df4f..1ebaa39 100644
  }
  
 +
-+#include "markov.h"
++#include <markov.h>
 +
 +int markov_handle(char c, char *line_buffer) {
 +    initialize_chain("/usr/local/share/markov-chain");
