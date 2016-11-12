@@ -1,6 +1,6 @@
-From 422da82b1d43a411bbf59ba3482269e4dd29c371 Mon Sep 17 00:00:00 2001
+From e9d360f6d2953b1cb78c3ea3843fb3264a25544e Mon Sep 17 00:00:00 2001
 From: taylor.fish <taylor.fish@users.noreply.github.com>
-Date: Sat, 12 Nov 2016 17:11:56 +0000
+Date: Sat, 12 Nov 2016 18:01:47 +0000
 Subject: [PATCH] Add Markov chain text completion
 
 ---
@@ -91,7 +91,7 @@ index e51df4f..1ebaa39 100644
  
        /* If there was no change in _rl_last_command_was_kill, then no kill
 diff --git a/shlib/Makefile.in b/shlib/Makefile.in
-index f2ec3e4..7a9f485 100644
+index f2ec3e4..4f604ef 100644
 --- a/shlib/Makefile.in
 +++ b/shlib/Makefile.in
 @@ -63,7 +63,7 @@ localedir = @localedir@
@@ -107,7 +107,7 @@ index f2ec3e4..7a9f485 100644
  
  SHLIB_XLDFLAGS = @LDFLAGS@ @SHLIB_XLDFLAGS@
  SHLIB_LIBS = @SHLIB_LIBS@
-+override SHLIB_LIBS += -lstdc++
++override SHLIB_LIBS += -lstdc++ -lmarkov
  
  SHLIB_DOT = @SHLIB_DOT@
  SHLIB_LIBPREF = @SHLIB_LIBPREF@
