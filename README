@@ -15,6 +15,7 @@ Installation
 
 To install markov-complete, run:
 
+    $ make libs
     $ sudo make install-libs
     $ make
     $ sudo make install
