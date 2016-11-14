@@ -44,6 +44,9 @@ you've installed markov-complete, run (from this directory):
     $ ./transpile.py chain.json > markov-chain
     $ sudo cp markov-chain /usr/local/share/
 
+You can also set the environment variable MARKOV_CHAIN to specify a different
+chain to use.
+
 
 Usage
 -----
