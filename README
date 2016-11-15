@@ -55,6 +55,9 @@ Once you've typed a few words in a program that uses markov-complete, press
 ` (backtick) to autocomplete the next word. Press Ctrl+o to cycle through
 Markov suggestions. Ctrl+Shift+` will enter a normal backtick.
 
+You can use `rlwrap` to enable markov-complete with any program that runs in
+canonical mode (as opposed to raw mode).
+
 
 System requirements
 -------------------
