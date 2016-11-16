@@ -10,6 +10,11 @@
                  \___\___/|_| |_| |_| .__/|_|\___|\__\___|
                                     |_|
 
+
+markov-complete adds Markov chain text completion to GNU Readline, Vim, and
+WeeChat.
+
+
 Installation
 ------------
 
@@ -20,7 +25,7 @@ To install markov-complete, run:
     $ make
     $ sudo make install
 
-A vim plugin will be installed in /etc/vimrc/plugin. WeeChat will be installed
+A Vim plugin will be installed in /etc/vimrc/plugin. WeeChat will be installed
 in /usr/local/bin/ with new default keybindings for markov-complete. You may
 need to regenerate ~/.weechat/weechat.conf. You can also add the bindings
 manually under the [key] section of your weechat.conf. See weechat/keys.conf.
